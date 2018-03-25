@@ -229,12 +229,47 @@
   // Determine whether all of the elements match a truth test.
   _.every = function(collection, iterator) {
     // TIP: Try re-using reduce() here.
+    //reduce and compare the total of the elements.
+    if (iterator === undefined && !collection.includes(false)) {
+      return true;
+    } else if (iterator === undefined && collection.includes(false)) {
+      return false;
+    }
+    if (collection.length === 1 && collection[0] === 0) {
+      return false;
+    }
+    var defaultSum = _.reduce(collection, function(total, element) {
+      return (total += element);
+    });
+    var checkedSum = _.reduce(collection, function(total, element) {
+      if (iterator(element)) {
+        return total += element;
+      }
+    });
+    if (defaultSum === checkedSum) {
+      return true;
+    }
+    return false;
+    //returns true or false.
   };
 
   // Determine whether any of the elements pass a truth test. If no iterator is
   // provided, provide a default one
   _.some = function(collection, iterator) {
     // TIP: There's a very clever way to re-use every() here.
+    var falseForNow = false;
+    if (iterator === undefined && collection.length !==0) {
+      if (collection.includes(true)) {
+        return true;
+      }
+      return false;
+    }
+    _.each (collection, function(element) {
+      if (iterator(element)) {
+        falseForNow = true;
+      }
+    });
+    return falseForNow;
   };
 
 
@@ -257,11 +292,27 @@
   //     bla: "even more stuff"
   //   }); // obj1 now contains key1, key2, key3 and bla
   _.extend = function(obj) {
+    for (var i = 0; i < arguments.length; i++) {
+      _.each(arguments[i], function(value, key) {
+        obj[key] = value;
+      })
+    }
+    return obj;
   };
 
   // Like extend, but doesn't ever overwrite a key that already
   // exists in obj
   _.defaults = function(obj) {
+    var objKeys = Object.keys(obj);
+    for (var i = 0; i < arguments.length; i++) {
+      _.each(arguments[i], function(value, key) {
+        var objKeys = Object.keys(obj);
+        if (!objKeys.includes(key)) {
+          obj[key]=value;
+        }
+      });
+    }
+    return obj;
   };
 
 
@@ -305,6 +356,23 @@
   // already computed the result for the given argument and return that value
   // instead if possible.
   _.memoize = function(func) {
+    var alreadyCalled = {};
+    return function() {
+      var exist = false;
+      var returnThis;
+      var slice = Array.prototype.slice;
+      var args = slice.call(arguments);
+      if (alreadyCalled[func.toString()+args+args.length] !== undefined) {
+        exist = true;
+        returnThis = alreadyCalled[func.toString()+args+args.length];
+      }
+      if (exist === false) {
+        alreadyCalled[func.toString()+args+args.length] = func.apply(this, arguments);
+        return alreadyCalled[func.toString()+args+args.length];
+      } else {
+        return returnThis;
+      }
+    }
   };
 
   // Delays a function for the given number of milliseconds, and then calls
@@ -313,7 +381,8 @@
   // The arguments for the original function are passed after the wait
   // parameter. For example _.delay(someFunction, 500, 'a', 'b') will
   // call someFunction('a', 'b') after 500ms
-  _.delay = function(func, wait) {
+  _.delay = function(func, wait, ...args) {
+    return setTimeout(function() {func(...args);},wait);
   };
 
 
@@ -328,6 +397,24 @@
   // input array. For a tip on how to make a copy of an array, see:
   // http://mdn.io/Array.prototype.slice
   _.shuffle = function(array) {
+    function randomGen() { //should return num from 0-array.length. basically the indexes.
+      var min = 0;
+      var max = array.length-1;
+      return Math.floor(Math.random() * (max - min + 1 )) + min;
+    }
+    var shuffledIndex = [];
+    var shuffled = [];
+    while (shuffledIndex.length !== array.length) {
+      var temp = randomGen();
+      if (!shuffledIndex.includes(temp)) {
+        shuffledIndex.push(temp);
+      }
+    }
+    // console.log(shuffledIndex)
+    for (var i = 0; i < shuffledIndex.length; i++) {
+      shuffled[shuffledIndex[i]] = array[i];
+    }
+    return shuffled;
   };
 
 
